@@ -1,0 +1,5 @@
+
+        window.$adManagementConfig = window.$adManagementConfig || {};
+        window.$adManagementConfig.web = window.$adManagementConfig.web || {};
+        window.$adManagementConfig.web.keywords = {"status":"PROCESSED","sales_kw":"esp8266 filesystem uploader,arduino ide,files,spiffs,web server,esp8266fs-x.zip file,save html,css files,folder,data,plugin,arduino sketch,html code,tools folder,upload files","sales_cat":"596,599,601,621,611","sales_safety":"GGT0"};
+      
