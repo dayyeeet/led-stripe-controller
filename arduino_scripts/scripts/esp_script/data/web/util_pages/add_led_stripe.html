@@ -1,0 +1,22 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width = device-width, initial-scale = 1.0, maximum-scale = 1.0, user-scalable=0">
+    <link rel="stylesheet" href="../res/css/style.css">
+    <title>Ledstripes</title>
+</head>
+
+<body>
+<img class="logo" src="../res/img/logo.svg">
+<div class="spacing"></div>
+<form action="/api/add_led_stripe">
+    <input type="reset"> <br><br>
+    <label for="gpio">GPIO-Slot</label><br>
+    <input type="time" id="gpio" name="gpio" autocomplete="off"><br><br>
+    <label for="ledcount">Number of LED's</label><br>
+    <input type="number" id="ledcount" name="ledcount"><br>
+    <input type="submit" value="Connect to network">
+</form>
+</body>
+
+</html>

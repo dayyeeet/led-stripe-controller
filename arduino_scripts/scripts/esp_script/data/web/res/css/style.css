@@ -1,0 +1,176 @@
+body {
+  background: rgb(0,255,119);
+  background: linear-gradient(32deg, rgba(0,255,119,1) 24%, rgba(76,255,163,1) 100%);
+  font-family: Arial, Helvetica, Sans-Serif;
+  color: #ffffff;
+}
+
+.title {
+  text-align: center;
+  font-size: 7vw;
+  font-weight: bold;
+  position: relative;
+}
+
+.logo{
+  display: flex;
+  justify-content: center;
+  width: 40vw;
+  height: 40vw;
+  margin: auto;
+  margin-top: 4em;
+}
+
+.sub-title {
+ font-size: 8vw;
+}
+
+.spacing {
+  width: 100%;
+  height: 10vh;
+  position: relative;
+}
+
+form {
+  position: relative;
+  width:60vw;
+  background-color: #fff;
+  margin:auto;
+  border-radius: 5px;
+  padding:2em;
+  color: black;
+}
+
+form label{
+  font-size: 3vw;
+  margin-left: 2vw;
+  color: rgba(0,0,0,0.5);
+}
+
+form input{
+  position: relative;
+  width: 100%;
+  height: 7vw;
+  padding: 0.5em;
+  border-radius: 10vw;
+  border:1px solid rgba(0,0,0,0.3);
+}
+
+form input:focus{
+  border:1px solid #3DDC84;
+  outline:none;
+  color: #3DDC84;
+
+}
+
+form input[type="submit"]{
+  position: relative;
+  text-align: center;
+  display: inline-block;
+  width: 100%;
+  border: 2px solid #3DDC84;
+  color: white;
+  height: auto;
+  background-color: #3DDC84;
+  margin-top: 1vh;
+  padding: 0.5em;
+  font-weight: bold;
+  font-size: 4vw;
+}
+
+form input[type="reset"]{
+  position: relative;
+  text-align: center;
+  display: inline-block;
+  width: 100%;
+  border: 2px solid #3DDC84;
+  color: #3DDC84;
+  height: auto;
+  background-color: white;
+  margin-top: 5vh;
+  padding: 0.5em;
+  font-weight: bold;
+  font-size: 4vw;
+}
+
+@keyframes submit-hover {
+  from {
+    background-color: #3DDC84;
+    color:white;
+    }
+  to {
+    background-color: white;
+    color: #3DDC84;
+    cursor: pointer;
+    }
+}
+
+@keyframes reset-hover {
+  from {
+    background-color: white;
+    color: #3DDC84;
+    }
+  to {
+    background-color: #3DDC84;
+    color: white;
+    cursor: pointer;
+    }
+}
+
+form input[type="submit"]:hover{
+  background-color: white;
+  color: #3DDC84;
+  animation-name: submit-hover;
+  animation-duration: 0.3s;
+  cursor: pointer;
+}
+
+form input[type="reset"]:hover{
+  background-color: #3DDC84;
+  color: white;
+  animation-name: reset-hover;
+  animation-duration: 0.3s;
+  cursor: pointer;
+}
+
+@media screen and (min-width: 800px) {
+  .title {
+     font-size: 70px;
+  }
+
+  .sub-title {
+     font-size: 30px;
+  }
+
+  .logo {
+    width: 15em;
+    height: 15em;
+  }
+
+  form {
+    width: 25em;
+  }
+
+  form label{
+    font-size: 20px;
+    margin-left: 10px;
+  }
+
+  form input{
+    width: 400px;
+    height: 35px;
+    border-radius: 1.2em;
+  }
+
+  form input[type="submit"]{
+    width: 400px;
+    font-size: 1.3em;
+  }
+
+  form input[type="reset"]{
+    width: 400px;
+    font-size: 1.3em;
+  }
+
+
+}

@@ -44,6 +44,7 @@ AsyncWebServer server(80);
 const byte DNS_PORT = 53;
 DNSServer dnsServer;
 
+
 void setup() {
   delay(1000);
   Serial.begin(9600);
@@ -52,38 +53,30 @@ void setup() {
   WiFi.softAPConfig(apIP, apIP, netMsk);
   // its an open WLAN access point without a password parameter
   WiFi.softAP(softAP_ssid);
-  delay(1000);
   Serial.println("AP IP address: ");
   Serial.println(WiFi.softAPIP());
-  delay(1000);
   Serial.println("Starting file system...");
   SPIFFS.begin();
-  delay(1000);
   Serial.println("Starting DNS server...");
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
   dnsServer.start(DNS_PORT, "*", apIP);
-  delay(1000);
   Serial.println("Registering MDNS connection for " + String(project_id) + "...");
   if(!MDNS.begin(project_id)) Serial.print("MDNS connection failed!");
-  delay(1000);
   Serial.println("Registering captive portal pages...");
-  registerCaptiveRedirectPage("/generate_204");
-  registerCaptiveRedirectPage("/fwlink");
   server.onNotFound([](AsyncWebServerRequest *request) {
         captivePortal(request);
   });
-  delay(1000);
   Serial.println("Registering web pages...");
   registerRootPage();
   registerBasicAPIPages();
-  delay(1000);
   Serial.println("Starting server...");
   server.begin();
 }
 
 void registerRootPage()
 {
-  server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
+  server.serveStatic("/res/", SPIFFS, "/www/res/");
+  server.serveStatic("/captive_landing/", SPIFFS, "/captive_landing").setDefaultFile("index.html");
 }
 
 void registerBasicAPIPages()
@@ -91,7 +84,23 @@ void registerBasicAPIPages()
   server.on("/connected_to_ledstripes_network", HTTP_GET, [](AsyncWebServerRequest *request){
               AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "You are connected to an Ledstripes network");
               request->send(response);
-       }); 
+       });
+
+  server.on("/api/login_wifi", HTTP_GET, [](AsyncWebServerRequest *request){
+
+              //Read incoming url /login_wifi?ssid=SSID&password=PASSWORD
+              String ssid = "";
+              String password;
+              if(request->hasParam("ssid")) ssid = request->getParam("ssid")->value();
+              if(request->hasParam("password")) password = request->getParam("password")->value();
+
+              //Handle incoming url /login_wifi?ssid=SSID&password=PASSWORD
+              Serial.println("SSID: '" + ssid + "' | password: '" + password + "'");
+              //Redirect back to home page hence only api page
+              AsyncWebServerResponse *response = request->beginResponse(302);
+              response->addHeader("Location", String("http://") + toStringIp(apIP) + "/captive_landing/");
+              request->send(response);
+       });    
 }
 
 
@@ -106,7 +115,7 @@ boolean captivePortal(AsyncWebServerRequest *request)
 {
 if (request->url() != "/" && request->url() != "" && request->url() != NULL) {
     AsyncWebServerResponse *response = request->beginResponse(302);
-    response->addHeader("Location", String("http://") + toStringIp(apIP));
+    response->addHeader("Location", String("http://") + toStringIp(apIP) + "/captive_landing");
     request->send(response);
     return true;
   }
