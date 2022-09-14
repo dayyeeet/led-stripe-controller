@@ -25,12 +25,17 @@
 #define SSID "Ledstripes"
 #endif
 
+#ifndef PASSWORD
+#define PASSWORD ""
+#endif
+
 #ifndef PID
 #define PID "ledstripes"
 #endif
 
 const char *softAP_ssid = SSID;
 const char *project_id = PID;
+const char *softAP_password = PASSWORD;
 
 // The access points IP address and net mask
 // It uses the default Google DNS IP address 8.8.8.8 to capture all
@@ -51,8 +56,12 @@ void setup() {
   Serial.println();
   Serial.println("Configuring access point...");
   WiFi.softAPConfig(apIP, apIP, netMsk);
-  // its an open WLAN access point without a password parameter
+  // its an open WLAN access point without a password
+  if(softAP_password && !softAP_password[0])
   WiFi.softAP(softAP_ssid);
+  //its an open WLAN access point with password
+  else
+  WiFi.softAP(softAP_ssid, softAP_password);
   Serial.println("AP IP address: ");
   Serial.println(WiFi.softAPIP());
   Serial.println("Starting file system...");
@@ -62,12 +71,16 @@ void setup() {
   dnsServer.start(DNS_PORT, "*", apIP);
   Serial.println("Registering MDNS connection for " + String(project_id) + "...");
   if(!MDNS.begin(project_id)) Serial.print("MDNS connection failed!");
-  Serial.println("Registering captive portal pages...");
+  Serial.println("Registering web pages...");
+  registerRootPage();
+  //server.serveStatic("/checking_wifi", SPIFFS, "/web/basic/basic_message.html").setTemplateProcessor(checking_ssid_password_processor);  
+  //server.serveStatic("/checking_wifi_result_ok", SPIFFS, "/web/basic/basic_message.html").setTemplateProcessor(result_ok_ssid_password_processor);
+  //server.serveStatic("/checking_wifi_result_error", SPIFFS, "/web/basic/basic_message.html").setTemplateProcessor(result_bad_ssid_password_processor);
+  server.serveStatic("/new_ledstripe", SPIFFS, "/web/forms/add_led_stripe.html"); 
   server.onNotFound([](AsyncWebServerRequest *request) {
         captivePortal(request);
   });
-  Serial.println("Registering web pages...");
-  registerRootPage();
+  Serial.println("Registering API pages...");
   registerBasicAPIPages();
   Serial.println("Starting server...");
   server.begin();
@@ -75,8 +88,8 @@ void setup() {
 
 void registerRootPage()
 {
-  server.serveStatic("/res/", SPIFFS, "/www/res/");
-  server.serveStatic("/captive_landing/", SPIFFS, "/captive_landing").setDefaultFile("index.html");
+  server.serveStatic("/res", SPIFFS, "/web/res");
+  server.serveStatic("/captive_landing", SPIFFS, "/web/forms/wifi_ssid_pass.html");
 }
 
 void registerBasicAPIPages()
@@ -86,7 +99,7 @@ void registerBasicAPIPages()
               request->send(response);
        });
 
-  server.on("/api/login_wifi", HTTP_GET, [](AsyncWebServerRequest *request){
+  server.on("/login_wifi", HTTP_GET, [](AsyncWebServerRequest *request){
 
               //Read incoming url /login_wifi?ssid=SSID&password=PASSWORD
               String ssid = "";
@@ -97,10 +110,15 @@ void registerBasicAPIPages()
               //Handle incoming url /login_wifi?ssid=SSID&password=PASSWORD
               Serial.println("SSID: '" + ssid + "' | password: '" + password + "'");
               //Redirect back to home page hence only api page
-              AsyncWebServerResponse *response = request->beginResponse(302);
-              response->addHeader("Location", String("http://") + toStringIp(apIP) + "/captive_landing/");
-              request->send(response);
-       });    
+              request->send(SPIFFS, "/web/basic/basic_message.html", String(), false, checking_ssid_password_processor);
+
+              bool pass_and_ssid_ok = false;
+
+              //TODO: check if password and ssid are ok
+              
+              if(pass_and_ssid_ok) request->send(SPIFFS, "/web/basic/basic_message.html", String(), false, result_ok_ssid_password_processor);
+              else request->send(SPIFFS, "/web/basic/basic_message.html", String(), false, result_bad_ssid_password_processor);
+       });       
 }
 
 
@@ -126,6 +144,51 @@ void loop() {
   // handle all the DNS requests
   dnsServer.processNextRequest();
 }
+
+/** processors (replacing template texts for the basic webpage) */
+
+String checking_ssid_password_processor(const String& var)
+{
+  if(var == "STATUS")
+    return String("normal");
+  if(var == "TITLE")
+    return String("Checking...");
+  if(var == "SUB_TITLE")
+    return String("...If WiFi credentials are OK");  
+  return String();
+}
+
+String result_bad_ssid_password_processor(const String& var)
+{
+  if(var == "STATUS")
+    return String("error");
+  if(var == "TITLE")
+    return String("Bad configuration :c");
+  if(var == "SUB_TITLE")
+    return String("The WiFi can't take this configuration, since another WiFi exists with this name.");
+  if(var == "SHOULD_SHOW")
+    return String("true");
+  if(var == "GO_BACK_LINK")
+    return String("http://" + toStringIp(apIP) + "/captive_landing/");      
+  return String();
+}
+
+String result_ok_ssid_password_processor(const String& var)
+{
+  if(var == "STATUS")
+    return String("ok");
+  if(var == "TITLE")
+    return String("Change successful");
+  if(var == "SUB_TITLE")
+    return String("You have changed the networks name to " + String(SSID) + " and the password to " + String(PASSWORD) + ".");
+  if(var == "SHOULD_SHOW")
+    return String("true");
+  if(var == "GO_BACK_LINK")
+    return String("http://" + toStringIp(apIP) + "/captive_landing/");      
+  return String();
+}
+
+
 
 /** Is this an IP? */
 boolean isIp(String str) {

@@ -9,12 +9,12 @@
 <body>
 <img class="logo" src="../res/img/logo.svg">
 <div class="spacing"></div>
-<form action="/api/add_led_stripe">
-    <input type="reset"> <br><br>
-    <label for="gpio">GPIO-Slot</label><br>
-    <input type="time" id="gpio" name="gpio" autocomplete="off"><br><br>
-    <label for="ledcount">Number of LED's</label><br>
-    <input type="number" id="ledcount" name="ledcount"><br>
+<form class="standard" action="/login_wifi">
+    <label for="ssid">SSID</label><br>
+    <input type="text" id="ssid" name="ssid" autocomplete="off"><br><br>
+    <label for="password">Password</label><br>
+    <input type="password" id="password" name="password"><br>
+    <input type="reset" value="Reset">
     <input type="submit" value="Connect to network">
 </form>
 </body>

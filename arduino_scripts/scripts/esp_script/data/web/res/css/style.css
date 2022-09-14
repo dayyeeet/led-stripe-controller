@@ -4,10 +4,14 @@ body {
   font-family: Arial, Helvetica, Sans-Serif;
   color: #ffffff;
 }
+body[class="error"] {
+  background: rgb(173,0,0);
+  background: linear-gradient(32deg, rgba(173,0,0,1) 0%, rgba(255,76,76,1) 62%);
+}
 
 .title {
   text-align: center;
-  font-size: 7vw;
+  font-size: 9vw;
   font-weight: bold;
   position: relative;
 }
@@ -22,7 +26,7 @@ body {
 }
 
 .sub-title {
- font-size: 8vw;
+ font-size: 4.5vw;
 }
 
 .spacing {
@@ -31,7 +35,7 @@ body {
   position: relative;
 }
 
-form {
+form[class="standard"] {
   position: relative;
   width:60vw;
   background-color: #fff;
@@ -41,13 +45,14 @@ form {
   color: black;
 }
 
-form label{
+
+form[class="standard"] label{
   font-size: 3vw;
   margin-left: 2vw;
   color: rgba(0,0,0,0.5);
 }
 
-form input{
+form[class="standard"] input{
   position: relative;
   width: 100%;
   height: 7vw;
@@ -77,6 +82,26 @@ form input[type="submit"]{
   font-weight: bold;
   font-size: 4vw;
 }
+input[class="normal"]{
+    opacity: 0;
+}
+button[id="back-button"]{
+    display: none;
+}
+button[id="back-button"][class="true"]{
+  border-radius: 10vw;
+  text-align: center;
+  border: 4px solid white;
+  display: inline;
+  padding-top: 1vw;
+  padding-bottom: 1vw;
+  padding-left: 7vw;
+  padding-right: 7vw;
+  background-color: white;
+  font-weight: bold;
+  font-size: 4vw;
+  mix-blend-mode: screen;
+}
 
 form input[type="reset"]{
   position: relative;
@@ -105,16 +130,36 @@ form input[type="reset"]{
     }
 }
 
+@keyframes translucent-hover {
+  from {
+    background-color: white;
+    color: rgba(0,0,0,0);
+    }
+  to {
+    background-color: rgba(0,0,0,0);
+    color: white;
+    cursor: pointer;
+    }
+}
+
 @keyframes reset-hover {
   from {
     background-color: white;
     color: #3DDC84;
     }
   to {
-    background-color: #3DDC84;
+    background-color: none;
     color: white;
     cursor: pointer;
     }
+}
+
+button[id="back-button"][class="true"]:hover{
+  background-color: rgba(0,0,0,0);
+  color: white;
+  animation-name: translucent-hover;
+  animation-duration: 0.3s;
+  cursor: pointer;
 }
 
 form input[type="submit"]:hover{
@@ -147,16 +192,16 @@ form input[type="reset"]:hover{
     height: 15em;
   }
 
-  form {
+  form[class="standard"] {
     width: 25em;
   }
 
-  form label{
+  form[class="standard"] label{
     font-size: 20px;
     margin-left: 10px;
   }
 
-  form input{
+  form[class="standard"] input{
     width: 400px;
     height: 35px;
     border-radius: 1.2em;
@@ -165,11 +210,19 @@ form input[type="reset"]:hover{
   form input[type="submit"]{
     width: 400px;
     font-size: 1.3em;
+    justify-content: center;
+    padding: 0.1em;
   }
 
   form input[type="reset"]{
     width: 400px;
     font-size: 1.3em;
+    justify-content: center;
+    padding: 0.1em;
+  }
+
+  button[id="back-button"][class="true"]{
+    font-size: 40px;
   }
 
 
