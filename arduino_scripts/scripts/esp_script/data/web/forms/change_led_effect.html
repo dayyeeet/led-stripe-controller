@@ -1,0 +1,24 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width = device-width, initial-scale = 1.0, maximum-scale = 1.0, user-scalable=0">
+    <link rel="stylesheet" href="../res/css/style.css">
+    <title>Ledstripes</title>
+</head>
+<body>
+<img class="logo" src="../res/img/logo.svg">
+<div class="spacing"></div>
+<form class="led_settings" action="/change_leds">
+    <label for="brightness">Brightness</label><br>
+    <input type="range" id="brightness" name="Brightness" min="0" max="100" value="100"><br><br>
+    <label for="first-color">Ledstripe color settings</label><br><br>
+    <div class="color-container">
+        <input type="color" id="first-color" name="first-color" class="color-container-picker"><br>
+        <img src="../res/img/light_bulb.png" class="color-container-design">
+    </div>
+
+    <input type="reset" value="Reset">
+    <input type="submit" value="Change lighting">
+</form>
+</body>
+</html>

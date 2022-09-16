@@ -35,7 +35,7 @@ body[class="error"] {
   position: relative;
 }
 
-form[class="standard"] {
+form {
   position: relative;
   width:60vw;
   background-color: #fff;
@@ -61,12 +61,19 @@ form[class="standard"] input{
   border:1px solid rgba(0,0,0,0.3);
 }
 
-form input:focus{
+form[class="led_settings"] input{
+  position: relative;
+  width: 100%;
+  height: 7vw;
+}
+
+
+form[class="standard"] input:focus{
   border:1px solid #3DDC84;
   outline:none;
   color: #3DDC84;
-
 }
+
 
 form input[type="submit"]{
   position: relative;
@@ -81,6 +88,7 @@ form input[type="submit"]{
   padding: 0.5em;
   font-weight: bold;
   font-size: 4vw;
+  border-radius: 10vw;
 }
 input[class="normal"]{
     opacity: 0;
@@ -116,6 +124,7 @@ form input[type="reset"]{
   padding: 0.5em;
   font-weight: bold;
   font-size: 4vw;
+  border-radius: 10vw;
 }
 
 @keyframes submit-hover {
@@ -207,8 +216,18 @@ form input[type="reset"]:hover{
     border-radius: 1.2em;
   }
 
+  form[class="led_settings"] {
+    width: 25em;
+  }
+
+  form[class="led_settings"] input{
+      width: 400px;
+      height: 35px;
+  }
+
   form input[type="submit"]{
     width: 400px;
+    height: 35px;
     font-size: 1.3em;
     justify-content: center;
     padding: 0.1em;
@@ -216,6 +235,7 @@ form input[type="reset"]:hover{
 
   form input[type="reset"]{
     width: 400px;
+    height: 35px;
     font-size: 1.3em;
     justify-content: center;
     padding: 0.1em;
@@ -224,6 +244,41 @@ form input[type="reset"]:hover{
   button[id="back-button"][class="true"]{
     font-size: 40px;
   }
+
+  form[class="led_settings"] input[type="color"] {
+    outline: none;
+    border: none;
+  }
+
+  .color-container{
+    height: 1vh;
+    justify-content: center;
+    display: grid;
+  }
+
+  .color-container-picker{
+    z-index: 1;
+    grid-row: 1;
+    mix-blend-mode: lighten;
+  }
+
+  .color-container-design{
+    z-index: 2;
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  ::-moz-color-swatch {
+      outline: none;
+      border: none;
+  }
+
+  ::-webkit-color-swatch {
+      outline: none;
+      border: none;
+  }
+
+
 
 
 }
