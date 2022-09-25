@@ -3,6 +3,7 @@ body {
   background: linear-gradient(32deg, rgba(0,255,119,1) 24%, rgba(76,255,163,1) 100%);
   font-family: Arial, Helvetica, Sans-Serif;
   color: #ffffff;
+  margin: 0;
 }
 body[class="error"] {
   background: rgb(173,0,0);
@@ -35,6 +36,38 @@ body[class="error"] {
   position: relative;
 }
 
+.spacing-small {
+  width: 100%;
+  height: 4vw;
+  position: relative;
+}
+
+.section{
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  grid-gap: 5vw;
+}
+
+
+.section-white{
+  padding-top: 5vw;
+  padding-bottom: 5vw;
+  color: rgba(0,0,0,0.5);
+  background-color: white;
+  box-shadow: 0px 0px 5px rgba(0,0,0, 0.5);
+}
+
+.section-icon{
+  height: 0;
+  width: 0;
+}
+
+.section-grid-element {
+  margin-bottom: 1em;
+}
+
 form {
   position: relative;
   width:60vw;
@@ -43,10 +76,11 @@ form {
   border-radius: 5px;
   padding:2em;
   color: black;
+  box-shadow: 0px 0px 5px rgba(0,0,0, 0.5);
 }
 
 
-form[class="standard"] label{
+form label{
   font-size: 3vw;
   margin-left: 2vw;
   color: rgba(0,0,0,0.5);
@@ -187,6 +221,92 @@ form input[type="reset"]:hover{
   cursor: pointer;
 }
 
+  form[class="led_settings"] input[type="color"] {
+    outline: none;
+    border: none;
+    height: 15vw;
+    width: auto;
+    mask-image: url("../res/img/light_bulb.png");
+    cursor: pointer;
+    box-shadow: none;
+  }
+
+  .color-container{
+    justify-content: center;
+    display: grid;
+    row-gap: 0;
+  }
+
+  .color-wrapper{
+    display: grid;
+    height: 15vw;
+    width: auto;
+    margin-top: -4vw;
+    background: white;
+    transform: rotate(360deg);
+  }
+
+
+  .color-container-picker{
+    grid-column: 1;
+    grid-row: 1;
+    z-index: 2;
+    mix-blend-mode: overlay;
+  }
+
+  .color-container-design{
+    grid-column: 1;
+    grid-row: 1;
+    z-index: 1;
+    height: 13vw;
+    margin-top: 0.2vh;
+  }
+
+@media screen and (min-width: 1200px) {
+  .section {
+    grid-auto-flow: column;
+    display: grid;
+  }
+  .section-icon {
+    height: 25vw;
+    width: 25vw;
+    margin-top: 8vh;
+    -webkit-filter: drop-shadow(5px 1px 0px rgba(0,0,0,0.1));
+    -moz-filter: drop-shadow(5px 1px 0px rgba(0,0,0,0.1));
+    filter: drop-shadow(5px 1px 0px rgba(0,0,0,0.1));
+  }
+}
+@media screen and (min-width: 0px) and (max-width: 800px) {
+  .section {
+    grid-auto-flow: column;
+    display: grid;
+  }
+
+  .section-icon {
+    width: 15vw;
+    height: 15vw;
+    margin-top: 10vh;
+    -webkit-filter: drop-shadow(5px 1px 0px rgba(0,0,0,0.1));
+    -moz-filter: drop-shadow(5px 1px 0px rgba(0,0,0,0.1));
+    filter: drop-shadow(5px 1px 0px rgba(0,0,0,0.1));
+  }
+}
+@media screen and (min-width: 800px) and (max-width: 1200px) {
+  .section {
+    grid-auto-flow: column;
+    display: grid;
+  }
+
+  .section-icon {
+    width: 30vw;
+    height: 30vw;
+    margin-top: 10vh;
+    -webkit-filter: drop-shadow(5px 1px 0px rgba(0,0,0,0.1));
+    -moz-filter: drop-shadow(5px 1px 0px rgba(0,0,0,0.1));
+    filter: drop-shadow(5px 1px 0px rgba(0,0,0,0.1));
+  }
+}
+
 @media screen and (min-width: 800px) {
   .title {
      font-size: 70px;
@@ -197,15 +317,15 @@ form input[type="reset"]:hover{
   }
 
   .logo {
-    width: 15em;
-    height: 15em;
+    width: 25em;
+    height: 25em;
   }
 
   form[class="standard"] {
     width: 25em;
   }
 
-  form[class="standard"] label{
+  form label{
     font-size: 20px;
     margin-left: 10px;
   }
@@ -246,39 +366,37 @@ form input[type="reset"]:hover{
   }
 
   form[class="led_settings"] input[type="color"] {
-    outline: none;
-    border: none;
+    height: 80px;
   }
 
-  .color-container{
-    height: 1vh;
-    justify-content: center;
-    display: grid;
+  .color-wrapper {
+    height: 80px;
+    margin-top: -10px;
   }
 
-  .color-container-picker{
-    z-index: 1;
-    grid-row: 1;
-    mix-blend-mode: lighten;
+  .color-container-design {
+    height: 76px;
   }
 
-  .color-container-design{
-    z-index: 2;
-    grid-row: 1;
-    grid-column: 1;
+  .spacing-small {
+    height: 20px;
   }
-
-  ::-moz-color-swatch {
-      outline: none;
-      border: none;
-  }
-
-  ::-webkit-color-swatch {
-      outline: none;
-      border: none;
-  }
-
-
-
-
 }
+
+::-webkit-color-swatch {
+    border: none;
+    padding: 0;
+    transition: background-color 600ms ease-out;
+}
+
+::-webkit-color-swatch-wrapper {
+    padding: 0;
+    border: none;
+}
+
+input:focus {
+    outline: 0 none;
+    border: transparent;
+}
+
+
