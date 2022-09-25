@@ -224,7 +224,7 @@ form input[type="reset"]:hover{
   form[class="led_settings"] input[type="color"] {
     outline: none;
     border: none;
-    height: 15vw;
+    height: 9.5vw;
     width: auto;
     mask-image: url("../res/img/light_bulb.png");
     cursor: pointer;
@@ -241,7 +241,7 @@ form input[type="reset"]:hover{
     display: grid;
     height: 15vw;
     width: auto;
-    margin-top: -4vw;
+    margin-top: -4.5vw;
     background: white;
     transform: rotate(360deg);
   }
@@ -366,12 +366,12 @@ form input[type="reset"]:hover{
   }
 
   form[class="led_settings"] input[type="color"] {
-    height: 80px;
+    height: 56px;
   }
 
   .color-wrapper {
     height: 80px;
-    margin-top: -10px;
+    margin-top: -20px;
   }
 
   .color-container-design {
