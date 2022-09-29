@@ -9,4 +9,4 @@ function generateColorPickers(amount, accuracy)
     }
 }
 
-generateColorPickers(10, 2);
+generateColorPickers(100, 5);

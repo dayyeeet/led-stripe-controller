@@ -226,7 +226,6 @@ form input[type="reset"]:hover{
     border: none;
     height: 9.5vw;
     width: auto;
-    mask-image: url("../res/img/light_bulb.png");
     cursor: pointer;
     box-shadow: none;
   }

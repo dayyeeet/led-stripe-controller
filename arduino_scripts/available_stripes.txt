@@ -1,0 +1,7 @@
+Stripes:
+WS2812 RGB Lib=FastLED <- Start here
+SK6812 RGB/W Lib=FastLED?
+
+Libs:
+FastLED
+Neopixel
