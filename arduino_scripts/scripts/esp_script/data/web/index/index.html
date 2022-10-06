@@ -26,7 +26,7 @@
             <label for="ssid">SSID</label><br>
             <input type="text" id="ssid" name="ssid" autocomplete="off"><br><br>
             <label for="password">Password</label><br>
-            <input type="password" id="password" name="password"><br>
+            <input type="password" id="password" name="password" autocomplete="offs"><br>
             <input type="reset" value="Reset">
             <input type="submit" value="Change login data">
         </form>
@@ -48,9 +48,9 @@
             <label for="gpio">GPIO-Slot</label><br>
             <input type="number" id="gpio" name="gpio" autocomplete="off"><br><br>
             <label for="ledcount">Number of LED's</label><br>
-            <input type="number" id="ledcount" name="ledcount"><br><br>
-            <label for="ledcountaccuracy">Accuracy of light effect</label><br>
-            <input type="number" id="ledcountaccuracy" name="accuracy"><br>
+            <input type="number" id="ledcount" name="ledcount" autocomplete="off"><br><br>
+            <label for="resolution">Accuracy of light effect</label><br>
+            <input type="number" id="resolution" name="resolution" autocomplete="off"><br>
             <input type="reset" value="Reset">
             <input type="submit" value="Save stripe">
         </form>
@@ -93,6 +93,7 @@
 </div>
 
 <script src="../res/js/global_color.js"></script>
+<script src="../res/js/generate_placeholders.js"></script>
 </body>
 
 </html>
