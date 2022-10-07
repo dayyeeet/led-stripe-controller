@@ -35,10 +35,6 @@ void loop() {
 
 //    JSON CODE
 
-#ifndef JSONPacket_h
-#define JSONPacket_h
-#include Arduino.h
-#include ArduinoJson.h
 class JSONPacket {
   public:
     void send(String packetType, DynamicJsonDocument jsonContent)
@@ -48,89 +44,82 @@ class JSONPacket {
       sentDoc["type"] = packetType;
       serializeJson(sentDoc, Serial);
     }
-}
-#endif
+};
 
-#ifndef JSONPacketListener_h
-#define JSONPacketListener_h
-#include Arduino.h
-#include ArduinoJson.h
-class JSONPacketListener {
+class JSONPacketListener {  
   public:
+    JSONPacketListener() = default;
     JSONPacketListener(String packetType){
-      this->packetType = packetType;
+      _packetType = packetType;
     }
-    virtual void onReceive(DynamicJsonDocument doc);
+    virtual void onReceive(DynamicJsonDocument doc) = 0;
     String getPacketType() {
-      return packetType;
+      return _packetType;
     }
-  private:
-    String packetType;  
-}
-#endif
+  protected:
+    String _packetType;
+};
 
-#ifndef JSONPacketVerifier_h
-#define JSONPacketVerifier_h
-#include Arduino.h
-#include ArduinoJson.h
+class LoginJSONPacketListener : public JSONPacketListener {
+  public:
+    void onReceive(DynamicJsonDocument doc) override
+    {
+
+    }
+};
+
 class JSONPacketVerifier 
 {
   public:
-    JSONPacketVerifier(JSONPacketListener listener)
+    JSONPacketVerifier(JSONPacketListener* packetListener)
     {
-        packetType = listener.getPacketType();
+        this->packetType = packetListener->getPacketType();
     } 
     DynamicJsonDocument unwrap(String content)
     {
         DynamicJsonDocument wrapped(1024);
         deserializeJson(wrapped, content);
         if(wrapped["type"] != packetType)
-        return NULL;
+        return DynamicJsonDocument(1024);
         return wrapped["content"];
     }
   private:
     String packetType;    
-}
-#endif
+};
 
-#ifndef JSONStorage_h
-#define JSONStorage_h
-#include Arduino.h
-#include ArduinoJson.h
-#include FS.h
 class JSONStorage {
   public:
-    void store(DynamicJsonDocument doc, String fileName)
+    void store(DynamicJsonDocument doc, char* fileName)
     {
       File file = SPIFFS.open(fileName, "w");
       String jsonContent = "";
       serializeJson(doc, jsonContent);
-      file.write(jsonContent);
+      file.write(jsonContent.c_str());
       file.close();
     }
 
-    DynamicJsonDocument pull(String fileName)
+    DynamicJsonDocument pull(char* fileName)
     {
       File file = SPIFFS.open(fileName, "r");
       String content = "";
       while(file.available())
       {
-        content = content + file.readStringUntil("\n");
+        content = content + file.readStringUntil('\n');
       }
       DynamicJsonDocument doc(1024);
-      deserializeJson(doc, jsonContent);
+      deserializeJson(doc, content);
       file.close();
       return doc; 
     }
-}
-#endifs
+};
 
 JSONStorage jsonStorage();
 
-int AMOUNT_OF_LISTENER_TYPES = 5;
+const int AMOUNT_OF_LISTENER_TYPES = 5;
 int listenerArrayIndex = 0;
-JSONPacketListener listenerArray[AMOUNT_OF_LISTENER_TYPES];
-void registerJSONPacketListener(JSONPacketListener listener)
+JSONPacketListener *listenerArray[AMOUNT_OF_LISTENER_TYPES];
+
+void registerJSONPacketListener(class JSONPacketListener* listener)
 {
   if(listenerArrayIndex >= AMOUNT_OF_LISTENER_TYPES) return;
   listenerArray[listenerArrayIndex] = listener;
@@ -142,25 +131,23 @@ void callRightJSONPacketListeners()
     String content = "";
     while(Serial.available())
     {
-      content = content + Serial.readStringUntil("\n");
+      content = content + Serial.readStringUntil('\n');
     }
 
     for(int i = 0; i < AMOUNT_OF_LISTENER_TYPES; i++)
     {
-      JSONPacketListener listener = listenerArray[i];
+      JSONPacketListener* listener = listenerArray[i];
       JSONPacketVerifier verifier = JSONPacketVerifier(listener);
       DynamicJsonDocument correctDocument = verifier.unwrap(content);
       if(correctDocument != NULL)
       {
-        listener.onReceive(correctDocument);
+        listener->onReceive(correctDocument);
       }
     }
 }
 
 
 //    WEB CODE
-#ifndef WifiCredentials_h
-#define WifiCredentials_h
 class WifiCredentials {
   public:
     WifiCredentials(String ssid, String pid, String password)
@@ -179,8 +166,7 @@ class WifiCredentials {
     String _ssid;
     String _pid;
     String _password;
-}
-#endif
+};
 
 // The access points IP address and net mask
 // It uses the default Google DNS IP address 8.8.8.8 to capture all
@@ -212,8 +198,8 @@ void setupWebserver()
   Serial.println("Starting DNS server...");
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
   dnsServer.start(DNS_PORT, "*", apIP);
-  Serial.println("Registering MDNS connection for " + String(project_id) + "...");
-  if(!MDNS.begin(project_id)) Serial.print("MDNS connection failed!");
+  Serial.println("Registering MDNS connection for " + String(credentials.getPID()) + "...");
+  if(!MDNS.begin(credentials.getPID())) Serial.print("MDNS connection failed!");
   Serial.println("Registering web pages...");
   registerRootPage();
   server.onNotFound([](AsyncWebServerRequest *request) {
@@ -277,10 +263,96 @@ String toStringIp(IPAddress ip) {
 
 //    API CODE
 
+enum APIRequestType {LOGIN};
+
+class APIRequest 
+{
+  public:
+    APIRequest(APIRequestType requestType, AsyncWebServerRequest *request, String paramKeys[], int paramLength)
+    {
+      this->request = request;
+      this->requestType = requestType;
+      this->paramKeys = paramKeys;
+      this->paramValues = new String[paramLength];
+      this->paramLength = paramLength;
+    }
+    ~APIRequest()
+    {
+      delete[] this->paramValues;
+      delete[] this->paramKeys;
+    }
+    String* getParamKeys()
+    {
+      return paramKeys;
+    }
+    bool isValidRequest()
+    {
+      for(int i = 0; i < paramLength; i++)
+      {
+        if(!request->hasParam(paramKeys[i]))
+        {
+          return false;
+        }
+      }
+      return true;
+    }
+    void storeValues()
+    {
+      for(int i = 0; i < paramLength; i++)
+      {
+        this->paramValues[i] = request->getParam(this->paramKeys[i])->value();
+      }
+    }
+    String getParamValue(String paramName)
+    {
+      for(int i = 0; i < sizeof(this->paramKeys); i++)
+      {
+        if(this->paramKeys[i].equals(paramName)) return this->paramValues[i];
+      }
+      return String();
+    }
+    String* getParamValues()
+    {
+      return paramValues;
+    }
+    APIRequestType getRequestType()
+    {
+      return requestType;
+    }
+  protected:
+    AsyncWebServerRequest *request;
+    String* paramKeys;
+    String* paramValues;
+    APIRequestType requestType;
+    int paramLength;  
+};
+
+class LoginAPIRequest : public APIRequest
+{
+  public:
+    using APIRequest::APIRequest;
+    bool checkIfValidData()
+    {
+      //TODO: Check if can login to this certain wifi
+      Serial.println("SSID: '" + this->getParamValue("ssid") + "' | password: '" + this->getParamValue("password") + "'");
+      return true;
+    }
+};
+
+
 void setupAPI()
 {
   Serial.println("Registering API pages...");
   registerBasicAPIPages();
+}
+
+void onAPIRequest(class APIRequest* request)
+{
+  if(request->getRequestType() == APIRequestType::LOGIN)
+  {
+    LoginAPIRequest &loginRequst = *static_cast<LoginAPIRequest*>(request);
+
+  }
 }
 
 void registerBasicAPIPages()
@@ -293,23 +365,38 @@ void registerBasicAPIPages()
   server.on("/login_wifi", HTTP_GET, [](AsyncWebServerRequest *request){
 
               //Read incoming url /login_wifi?ssid=SSID&password=PASSWORD
-              String ssid = "";
+              String* keys = new String[2]{"ssid", "password"};
+              LoginAPIRequest loginRequest = LoginAPIRequest(APIRequestType::LOGIN, request, keys, 2);
+              if(!loginRequest.isValidRequest()){
+                //TODO: send to invalid request screen
+                return;
+              } 
+              loginRequest.storeValues();
+              onAPIRequest(&loginRequest);
+
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              /*String ssid = "";
               String password;
               if(request->hasParam("ssid")) ssid = request->getParam("ssid")->value();
               if(request->hasParam("password")) password = request->getParam("password")->value();
 
               //Handle incoming url /login_wifi?ssid=SSID&password=PASSWORD
               Serial.println("SSID: '" + ssid + "' | password: '" + password + "'");
-              //Redirect back to home page hence only api page
-              request->send(SPIFFS, "/web/basic/basic_message.html", String(), false, checking_ssid_password_processor);
+              //Redirect back to home page hence only api page */
 
-              bool pass_and_ssid_ok = false;
-
-              //TODO: check if password and ssid are ok
-              
-              if(pass_and_ssid_ok) request->send(SPIFFS, "/web/basic/basic_message.html", String(), false, result_ok_ssid_password_processor);
-              else request->send(SPIFFS, "/web/basic/basic_message.html", String(), false, result_bad_ssid_password_processor);
-       });       
+  });       
 }
 
 
