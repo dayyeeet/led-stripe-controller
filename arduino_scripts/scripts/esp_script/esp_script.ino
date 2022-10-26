@@ -25,7 +25,14 @@ void setup() {
   delay(1000);
   Serial.begin(9600);
   Serial.println();
+  
+  //Initialize file system
+  Serial.print("Starting file system... success: ");
+  Serial.println(SPIFFS.begin());
+
   setupWebserver();
+  setupAPI();
+  setupJSON();
 }
 
 void loop() {
@@ -77,10 +84,11 @@ class JSONPacketVerifier
     } 
     DynamicJsonDocument unwrap(String content)
     {
+        if(!content.startsWith("{")) return DynamicJsonDocument(16);
         DynamicJsonDocument wrapped(1024);
         deserializeJson(wrapped, content);
         if(wrapped["type"] != packetType)
-        return DynamicJsonDocument(1024);
+        return DynamicJsonDocument(16);
         return wrapped["content"];
     }
   private:
@@ -113,11 +121,16 @@ class JSONStorage {
     }
 };
 
-JSONStorage jsonStorage();
+JSONStorage jsonStorage = JSONStorage();
 
 const int AMOUNT_OF_LISTENER_TYPES = 5;
 int listenerArrayIndex = 0;
 JSONPacketListener *listenerArray[AMOUNT_OF_LISTENER_TYPES];
+
+void setupJSON()
+{
+
+}
 
 void registerJSONPacketListener(class JSONPacketListener* listener)
 {
@@ -134,12 +147,12 @@ void callRightJSONPacketListeners()
       content = content + Serial.readStringUntil('\n');
     }
 
-    for(int i = 0; i < AMOUNT_OF_LISTENER_TYPES; i++)
+    for(int i = 0; i < listenerArrayIndex; i++)
     {
       JSONPacketListener* listener = listenerArray[i];
       JSONPacketVerifier verifier = JSONPacketVerifier(listener);
       DynamicJsonDocument correctDocument = verifier.unwrap(content);
-      if(correctDocument != NULL)
+      if(!correctDocument.isNull())
       {
         listener->onReceive(correctDocument);
       }
@@ -168,14 +181,42 @@ class WifiCredentials {
     String _password;
 };
 
+class CaptiveRequestHandler : public AsyncWebHandler {
+public:
+  CaptiveRequestHandler() {}
+  virtual ~CaptiveRequestHandler() {}
+
+  bool canHandle(AsyncWebServerRequest *request){
+    DynamicJsonDocument captiveEnabledDoc = JSONStorage().pull("/cfg/ap_config.json");
+                                             //Check if captive portal is enabled in config
+    return request->url() != "/" && !captiveEnabledDoc.isNull() ? captiveEnabledDoc["captive_portal"] : true;                               
+  }
+  void handleRequest(AsyncWebServerRequest *request)
+  {
+    request->redirect("/");
+  }
+};
+
 // The access points IP address and net mask
 // It uses the default Google DNS IP address 8.8.8.8 to capture all
 // Android dns requests
+
 IPAddress apIP(192, 169, 4, 1);
 IPAddress netMsk(255, 255, 255, 0);
-WifiCredentials credentials("Ledstripes", "ledstripes", "");
-
+WifiCredentials apCredentials("Ledstripes", "ledstripes", "");
+WifiCredentials wifiCredentials("SSID", "", "PASSWORD");
 AsyncWebServer server(80);
+
+void updateWifiCredentials(class WifiCredentials toUpdate, char* source)
+{
+  DynamicJsonDocument doc = jsonStorage.pull(source);
+  if(doc.isNull()) return;
+  toUpdate.setPassword(doc["password"]);
+  if(doc["ssid"] != NULL)
+  toUpdate.setSSID(doc["ssid"]);
+  if(doc["pid"] != NULL)
+  toUpdate.setPID(doc["pid"]);
+}
 
 // DNS server
 const byte DNS_PORT = 53;
@@ -183,31 +224,39 @@ DNSServer dnsServer;
 
 void setupWebserver()
 {
+  //Try to connect to online WiFi
+  updateWifiCredentials(wifiCredentials, "/cfg/wifi_config.json"); //Update WiFi ("Internet") credentials
+  Serial.print("Connecting wifi. Success: ");
+  bool success = false;
+  if(wifiCredentials.getPassword().equals(""))
+  success = WiFi.begin(wifiCredentials.getSSID());
+  else
+  success = WiFi.begin(wifiCredentials.getSSID());
+  Serial.println(success);
+
+  //Connect to Access point according to config
+  updateWifiCredentials(apCredentials, "/cfg/ap_config.json"); //Update AP mode credentials
   Serial.println("Configuring access point...");
   WiFi.softAPConfig(apIP, apIP, netMsk);
-  // its an open WLAN access point without a password
-  if(!credentials.getPassword().equals(""))
-  WiFi.softAP(credentials.getSSID());
-  //its an open WLAN access point with password
+  if(!apCredentials.getPassword().equals(""))
+  WiFi.softAP(apCredentials.getSSID());
   else
-  WiFi.softAP(credentials.getSSID(), credentials.getPassword());
+  WiFi.softAP(apCredentials.getSSID(), apCredentials.getPassword());
   Serial.println("AP IP address: ");
   Serial.println(WiFi.softAPIP());
-  Serial.println("Starting file system...");
-  SPIFFS.begin();
+
+  //Connect to DNS and MDNS according to config
   Serial.println("Starting DNS server...");
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
   dnsServer.start(DNS_PORT, "*", apIP);
-  Serial.println("Registering MDNS connection for " + String(credentials.getPID()) + "...");
-  if(!MDNS.begin(credentials.getPID())) Serial.print("MDNS connection failed!");
+  Serial.println("Registering MDNS connection for " + String(apCredentials.getPID()) + "...");
+  if(!MDNS.begin(apCredentials.getPID())) Serial.print("MDNS connection failed!");
+
+  //Register Web Pages and captive portal
   Serial.println("Registering web pages...");
   registerRootPage();
-  server.onNotFound([](AsyncWebServerRequest *request) {
-        captivePortal(request);
-  });
-  setupAPI();
-  Serial.println("Starting server...");
-  server.begin();
+  server.addHandler(new CaptiveRequestHandler()); //Register Captive Handler
+
 }
 
 void onWebServer()
@@ -222,71 +271,30 @@ void registerRootPage()
   server.serveStatic("/", SPIFFS, "/web/index");
 }
 
-void registerCaptiveRedirectPage(char *domain)
-{
-      server.on(domain, HTTP_GET, [](AsyncWebServerRequest *request){
-          captivePortal(request);
-      });
-}
-
-boolean captivePortal(AsyncWebServerRequest *request)
-{
-if (request->url() != "/" && request->url() != "" && request->url() != NULL) {
-    AsyncWebServerResponse *response = request->beginResponse(302);
-    response->addHeader("Location", String("http://") + toStringIp(apIP));
-    request->send(response);
-    return true;
-  }
-  return false;
-}
-
-/** Is this an IP? */
-boolean isIp(String str) {
-  for (int i = 0; i < str.length(); i++) {
-    int c = str.charAt(i);
-    if (c != '.' && (c < '0' || c > '9')) {
-      return false;
-    }
-  }
-  return true;
-}
-
-/** IP to String? */
-String toStringIp(IPAddress ip) {
-  String res = "";
-  for (int i = 0; i < 3; i++) {
-    res += String((ip >> (8 * i)) & 0xFF) + ".";
-  }
-  res += String(((ip >> 8 * 3)) & 0xFF);
-  return res;
-}
-
 //    API CODE
 
-enum APIRequestType {LOGIN};
 
-class APIRequest 
+class APIRequest : public AsyncWebHandler
 {
   public:
-    APIRequest(APIRequestType requestType, AsyncWebServerRequest *request, String paramKeys[], int paramLength)
+    APIRequest(String url, String paramKeys[], int paramLength)
     {
-      this->request = request;
-      this->requestType = requestType;
       this->paramKeys = paramKeys;
-      this->paramValues = new String[paramLength];
       this->paramLength = paramLength;
+      this->url = url;
     }
     ~APIRequest()
     {
-      delete[] this->paramValues;
       delete[] this->paramKeys;
     }
     String* getParamKeys()
     {
       return paramKeys;
     }
-    bool isValidRequest()
+    bool canHandle(AsyncWebServerRequest *request)
     {
+      Serial.println(request->url());
+      if(!request->url().equals(url)) return false;
       for(int i = 0; i < paramLength; i++)
       {
         if(!request->hasParam(paramKeys[i]))
@@ -296,46 +304,23 @@ class APIRequest
       }
       return true;
     }
-    void storeValues()
-    {
-      for(int i = 0; i < paramLength; i++)
-      {
-        this->paramValues[i] = request->getParam(this->paramKeys[i])->value();
-      }
-    }
-    String getParamValue(String paramName)
-    {
-      for(int i = 0; i < sizeof(this->paramKeys); i++)
-      {
-        if(this->paramKeys[i].equals(paramName)) return this->paramValues[i];
-      }
-      return String();
-    }
-    String* getParamValues()
-    {
-      return paramValues;
-    }
-    APIRequestType getRequestType()
-    {
-      return requestType;
-    }
+    virtual void handleRequest(AsyncWebServerRequest *request) {}
   protected:
-    AsyncWebServerRequest *request;
     String* paramKeys;
-    String* paramValues;
-    APIRequestType requestType;
+    String url;
     int paramLength;  
 };
 
 class LoginAPIRequest : public APIRequest
 {
   public:
-    using APIRequest::APIRequest;
-    bool checkIfValidData()
+    LoginAPIRequest() : APIRequest("/login_wifi", new String[2]{"ssid", "password"}, 2)
     {
-      //TODO: Check if can login to this certain wifi
-      Serial.println("SSID: '" + this->getParamValue("ssid") + "' | password: '" + this->getParamValue("password") + "'");
-      return true;
+      Serial.println("init loginAPIRequest");
+    }
+    void handleRequest(AsyncWebServerRequest *request)
+    {
+      Serial.println("loginrequest");
     }
 };
 
@@ -343,26 +328,20 @@ class LoginAPIRequest : public APIRequest
 void setupAPI()
 {
   Serial.println("Registering API pages...");
-  registerBasicAPIPages();
+  registerAppAPIPages();
+  server.addHandler(new LoginAPIRequest());
 }
 
-void onAPIRequest(class APIRequest* request)
-{
-  if(request->getRequestType() == APIRequestType::LOGIN)
-  {
-    LoginAPIRequest &loginRequst = *static_cast<LoginAPIRequest*>(request);
 
-  }
-}
-
-void registerBasicAPIPages()
+void registerAppAPIPages()
 {
   server.on("/connected_to_ledstripes_network", HTTP_GET, [](AsyncWebServerRequest *request){
               AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "You are connected to an Ledstripes network");
               request->send(response);
        });
 
-  server.on("/login_wifi", HTTP_GET, [](AsyncWebServerRequest *request){
+ /*
+ server.on("/login_wifi", HTTP_GET, [](AsyncWebServerRequest *request){
 
               //Read incoming url /login_wifi?ssid=SSID&password=PASSWORD
               String* keys = new String[2]{"ssid", "password"};
@@ -387,16 +366,17 @@ void registerBasicAPIPages()
               
               
               
-              /*String ssid = "";
+              String ssid = "";
               String password;
               if(request->hasParam("ssid")) ssid = request->getParam("ssid")->value();
               if(request->hasParam("password")) password = request->getParam("password")->value();
 
               //Handle incoming url /login_wifi?ssid=SSID&password=PASSWORD
               Serial.println("SSID: '" + ssid + "' | password: '" + password + "'");
-              //Redirect back to home page hence only api page */
+              //Redirect back to home page hence only api page 
 
-  });       
+  }); */
+    
 }
 
 

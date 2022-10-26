@@ -1,0 +1,99 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width = device-width, initial-scale = 1.0, maximum-scale = 1.0, user-scalable=0">
+    <link rel="stylesheet" href="../res/css/style.css">
+    <link rel="icon" href="../res/img/logo.svg">
+    <title>Ledstripes</title>
+</head>
+
+<body>
+<img class="logo" src="../res/img/logo.svg">
+
+<div class="spacing"></div>
+<div id="wifi"></div>
+<div class="section">
+    <img src="../res/img/wifi.png" class="section-icon">
+    <div class="section-grid-element">
+        <div class="title">
+            <div class="sub-title">
+                Network data settings
+            </div>
+        </div>
+        <div class="spacing-small"></div>
+        <form class="standard" action="/login_wifi">
+            <label for="ssid">SSID</label><br>
+            <input type="text" id="ssid" name="ssid" autocomplete="off"><br><br>
+            <label for="password">Password</label><br>
+            <input type="password" id="password" name="password" autocomplete="offs"><br>
+            <input type="reset" value="Reset">
+            <input type="submit" value="Change login data">
+        </form>
+    </div>
+</div>
+
+<div class="spacing"></div>
+<div id="led_settings"></div>
+<div class="section-white">
+    <div class="section">
+    <div class="section-grid-element">
+        <div class="title">
+            <div class="sub-title">
+                Led stripe settings
+            </div>
+        </div>
+        <div class="spacing-small"></div>
+        <form class="standard" action="/add_led_stripe">
+            <label for="gpio">GPIO-Slot</label><br>
+            <input type="number" id="gpio" name="gpio" autocomplete="off"><br><br>
+            <label for="ledcount">Number of LED's</label><br>
+            <input type="number" id="ledcount" name="ledcount" autocomplete="off"><br><br>
+            <label for="resolution">Accuracy of light effect</label><br>
+            <input type="number" id="resolution" name="resolution" autocomplete="off"><br>
+            <input type="reset" value="Reset">
+            <input type="submit" value="Save stripe">
+        </form>
+    </div>
+    <img src="../res/img/settings.png" class="section-icon">
+    </div>
+</div>
+
+<div class="spacing"></div>
+<div id="color_settings"></div>
+<div class="section">
+    <img src="../res/img/ledstripe.png" class="section-icon">
+    <div class="section-grid-element">
+        <div class="title">
+            <div class="sub-title">Ledstripe color settings</div>
+        </div>
+        <div class="spacing-small"></div>
+        <form class="led_settings" action="/change_leds">
+            <label for="brightness">Brightness</label><br>
+            <input type="range" id="brightness" name="brightness" min="0" max="100" value="100"><br><br>
+            <label>Global light effect</label>
+            <div class="color-container">
+                <div class="spacing-small"></div>
+                <div class="color-wrapper">
+                    <input type="color" id="global-color" name="global-color" class="color-container-picker" value="#DEDEDE"><br>
+                    <img src="../res/img/light_bulb.png" class="color-container-design">
+                </div>
+            </div>
+            <label>Light effect</label><br><br>
+            <div class="color-container" id="color-container">
+                <div class="spacing-small"></div>
+                <script src="../res/js/generate_color_pickers.js"></script>
+            </div>
+
+
+            <input type="reset" value="Reset">
+            <input type="submit" value="Change lighting">
+        </form>
+    </div>
+</div>
+
+<script src="../res/js/global_color.js"></script>
+<script src="../res/js/generate_placeholders.js"></script>
+</body>
+
+</html>
