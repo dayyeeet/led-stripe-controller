@@ -1,5 +1,0 @@
-
-        window.$mediavine = window.$mediavine || {};
-        window.$mediavine.web = window.$mediavine.web || {};
-        window.$mediavine.web.keywords = {"status":"PROCESSED","sales_kw":"esp32 web server,spiffs,css files,html,folder,current gpio state,css text,espasyncwebserver library,placeholder,arduino ide,color,web server page,arduino sketch,css file,string","sales_cat":"596,600,615,621,619","sales_safety":"GGT0"};
-      
